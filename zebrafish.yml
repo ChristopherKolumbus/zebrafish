@@ -1,0 +1,18 @@
+name: zebrafish_env
+channels:
+- defaults
+dependencies:
+- certifi=2017.11.5=py36hb8ac631_0
+- icc_rt=2017.0.4=h97af966_0
+- intel-openmp=2018.0.0=hd92c6cd_8
+- mkl=2018.0.1=h2108138_4
+- numpy=1.13.3=py36ha320f96_0
+- pip=9.0.1=py36h226ae91_4
+- python=3.6.3=h3b118a2_4
+- setuptools=36.5.0=py36h65f9e6e_0
+- vc=14=h2379b0c_2
+- vs2015_runtime=14.0.25123=hd4c4e62_2
+- wheel=0.30.0=py36h6c3ec14_1
+- wincertstore=0.2=py36h7fe50ca_0
+prefix: C:\Users\chris\Miniconda3\envs\zebrafish_env
+
