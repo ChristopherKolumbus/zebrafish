@@ -27,6 +27,10 @@ if __name__ == '__main__':
         files = [filename for filename in os.listdir(input_folder) if 'phase' in filename]
         # Create new filename for output file:
         new_filename = create_new_filename(files[0])
+        # Skip folder if output file already exists:
+        if os.path.isfile(os.path.join(input_folder, new_filename)):
+            print('Output file already exists!')
+            continue
         # Open output file and create csv writer for output:
         output_file = open(os.path.join(input_folder, new_filename), 'w', newline='')
         output_writer = csv.writer(output_file, delimiter='\t')
