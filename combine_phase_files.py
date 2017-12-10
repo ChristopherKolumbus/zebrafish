@@ -17,12 +17,12 @@ def get_number_and_phase(filename):
 
 if __name__ == '__main__':
 
-    input_path = ['..', 'exp2', 'data_saccades_detected']
+    input_path = os.path.normpath(r'..\exp2\data_saccades_detected')
 
-    for foldername in os.listdir(os.path.join(*input_path)):
+    for foldername in os.listdir(input_path):
         print('Folder', foldername)
 
-        input_folder = os.path.join(*input_path, foldername)
+        input_folder = os.path.join(input_path, foldername)
         # Find text files, ignoring text files containing meta data:
         files = [filename for filename in os.listdir(input_folder) if 'phase' in filename]
         # Create new filename for output file:
