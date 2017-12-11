@@ -15,10 +15,8 @@ def get_number_and_phase(filename):
     n = split_filename[-3]
     return n, p
 
-if __name__ == '__main__':
 
-    input_path = os.path.join(*['..', 'exp2' ,'data_saccades_detected'])
-
+def main(input_path):
     for foldername in os.listdir(input_path):
         print('Folder', foldername)
 
@@ -47,3 +45,9 @@ if __name__ == '__main__':
                         row.extend((phase, number))
                         # Write current row to output file:
                         output_writer.writerow(row)
+
+
+if __name__ == '__main__':
+
+    input_path = os.path.join(*['..', 'exp2' ,'data_saccades_detected'])
+    main(input_path)
