@@ -18,6 +18,8 @@ def get_number_and_phase(filename):
 
 def main(input_path):
     for foldername in os.listdir(input_path):
+        if foldername[-4:] == '.txt' or foldername[0] == '.':
+            continue
         print('Folder', foldername)
 
         input_folder = os.path.join(input_path, foldername)
@@ -27,8 +29,9 @@ def main(input_path):
         new_filename = create_new_filename(files[0])
         # Skip folder if output file already exists:
         if os.path.isfile(os.path.join(input_folder, new_filename)):
-            print('Output file already exists!')
-            continue
+            pass
+            #print('Output file already exists!')
+            #continue
         # Open output file and create csv writer for output:
         with open(os.path.join(input_folder, new_filename), 'w', newline='') as output_file:
             output_writer = csv.writer(output_file, delimiter='\t')
