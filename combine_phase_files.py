@@ -17,7 +17,7 @@ def get_number_and_phase(filename):
 
 if __name__ == '__main__':
 
-    input_path = os.path.normpath(r'..\exp2\data_saccades_detected')
+    input_path = os.path.join(*['..', 'exp2' ,'data_saccades_detected'])
 
     for foldername in os.listdir(input_path):
         print('Folder', foldername)
