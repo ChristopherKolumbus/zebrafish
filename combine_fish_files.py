@@ -27,28 +27,12 @@ if __name__ == '__main__':
         input_file = open(os.path.join(input_folder, filename[0]))
         input_reader = csv.reader(input_file, delimiter='\t')
         # Iterate over all rows of input file:
-        rowidx = 0
-
-
         for row in input_reader:
-            if rowidx == 0:
-                starttime01 = float(row[0])
-                starttime02 = float(row[1])
-
-            try:
-                row[0] = str(float(row[0]) - starttime01)
-                row[1] = str(float(row[1]) - starttime02)
-            except:
-                print('Menno...')
-                time.sleep(1)
-                embed()
-
             # Append phase and analysis number to current row:
             row.append(foldername)
             # Write current row to output file:
             output_writer.writerow(row)
 
-            rowidx += 1
         # Close input file:
         input_file.close()
     # Close output file:
