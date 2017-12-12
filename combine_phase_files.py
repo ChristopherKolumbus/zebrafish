@@ -1,5 +1,7 @@
 import os
 import csv
+from IPython import embed
+import time
 
 
 def create_new_filename(filename):
@@ -43,10 +45,13 @@ def main(input_path, overwrite=0):
                     input_reader = csv.reader(input_file, delimiter='\t')
                     # Iterate over all rows of input file:
                     for row in input_reader:
+
+
                         # Append phase and analysis number to current row:
                         row.extend((phase, number))
                         # Write current row to output file:
                         output_writer.writerow(row)
+
 
 
 if __name__ == '__main__':
