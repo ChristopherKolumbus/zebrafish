@@ -59,8 +59,7 @@ def combine_phase_files(path):
                 for row in input_reader:
                     row.extend((phase, analysis_number, phase_starts[int(phase) - 1]))
                     row += stimulus_protocol[int(phase) - 1]
-                    print(row)
                     output_writer.writerow(row)
 
-input_path = r'C:\Users\chris\data_saccades_detected\fish01'
+input_path = r'E:\Christoph\Downloads\data_saccades_detected\data_saccades_detected\fish01'
 combine_phase_files(input_path)
