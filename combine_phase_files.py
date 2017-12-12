@@ -16,7 +16,7 @@ def get_number_and_phase(filename):
     return n, p
 
 
-def main(input_path):
+def main(input_path, overwrite=0):
     for foldername in os.listdir(input_path):
         if foldername[-4:] == '.txt' or foldername[0] == '.':
             continue
@@ -24,14 +24,13 @@ def main(input_path):
 
         input_folder = os.path.join(input_path, foldername)
         # Find text files, ignoring text files containing meta data:
-        files = [filename for filename in os.listdir(input_folder) if 'phase' in filename]
+        files = [filename for filename in os.listdir(input_folder) if 'phase' in filename and 'phases' not in filename]
         # Create new filename for output file:
         new_filename = create_new_filename(files[0])
         # Skip folder if output file already exists:
-        if os.path.isfile(os.path.join(input_folder, new_filename)):
-            pass
-            #print('Output file already exists!')
-            #continue
+        if overwrite and os.path.isfile(os.path.join(input_folder, new_filename)):
+            print('Output file already exists!')
+            continue
         # Open output file and create csv writer for output:
         with open(os.path.join(input_folder, new_filename), 'w', newline='') as output_file:
             output_writer = csv.writer(output_file, delimiter='\t')
@@ -52,5 +51,5 @@ def main(input_path):
 
 if __name__ == '__main__':
 
-    input_path = os.path.join(*['..', 'exp2' ,'data_saccades_detected'])
-    main(input_path)
+    input_path = os.path.join(*['..', '..','data_saccades_detected'])
+    main(input_path, overwrite=1)
