@@ -28,7 +28,7 @@ def main(input_path, overwrite=0):
         # Create new filename for output file:
         new_filename = create_new_filename(files[0])
         # Skip folder if output file already exists:
-        if overwrite and os.path.isfile(os.path.join(input_folder, new_filename)):
+        if not overwrite and os.path.isfile(os.path.join(input_folder, new_filename)):
             print('Output file already exists!')
             continue
         # Open output file and create csv writer for output:
@@ -52,4 +52,4 @@ def main(input_path, overwrite=0):
 if __name__ == '__main__':
 
     input_path = os.path.join(*['..', '..','data_saccades_detected'])
-    main(input_path, overwrite=1)
+    main(input_path, overwrite=0)
