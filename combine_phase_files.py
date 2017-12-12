@@ -18,7 +18,7 @@ def get_number_and_phase(filename):
 
 def main(input_path, overwrite=0):
     for foldername in os.listdir(input_path):
-        if foldername[-4:] == '.txt' or foldername[0] == '.':
+        if foldername.endswith('.txt') or foldername[0] == '.':
             continue
         print('Folder', foldername)
 
@@ -52,4 +52,4 @@ def main(input_path, overwrite=0):
 if __name__ == '__main__':
 
     input_path = os.path.join(*['..', '..','data_saccades_detected'])
-    main(input_path, overwrite=0)
+    main(input_path, overwrite=1)
