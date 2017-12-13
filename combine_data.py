@@ -1,6 +1,7 @@
 import os
 import csv
 import math
+from IPython import embed
 
 
 def get_phase_files(input_path):
@@ -11,6 +12,14 @@ def get_phase_files(input_path):
             phase_files.append(file)
     return phase_files
 
+
+def get_all_phases_file(input_path):
+    files = os.listdir(input_path)
+    for file in files:
+        if 'all_phases' in file:
+            return file
+
+    return False
 
 def get_stimulus_protocol_file(input_path):
     files = os.listdir(input_path)
@@ -129,7 +138,7 @@ def export_phase_data(input_path, file_name, phase_data):
             output_writer.writerow(row)
 
 
-def main(input_path):
+def main_combine_phases(input_path):
     phase_files = get_phase_files(input_path)
     stimulus_protocol_file = get_stimulus_protocol_file(input_path)
     stimulus_protocol_data_file = get_stimulus_protocol_data_file(input_path)
@@ -143,7 +152,43 @@ def main(input_path):
     export_phase_data(input_path, new_file_name, phase_data)
 
 
+def main_combine_fishes(input_path, outfilename):
+
+    # open output file
+    with open(os.path.join(*input_path, outfilename), 'w', newline='') as outfile:
+        outwriter = csv.writer(outfile, delimiter='\t')
+
+        # iterate through all fish-folders
+        for foldername in os.listdir(os.path.join(*input_path)):
+            if foldername.endswith('.txt') or not foldername.startswith('fish'):
+                continue
+            print(foldername)
+
+            # open input-file (all_phases)
+            all_phases_file = get_all_phases_file(os.path.join(*input_path, foldername))
+            with open(os.path.join(*input_path, foldername, all_phases_file), 'r', newline='') as infile:
+                inreader = csv.reader(infile, delimiter='\t')
+                for row in inreader:
+                    # add fishid to row and add row to outfile
+                    row.append(foldername)
+                    outwriter.writerow(row)
+            infile.close()
+
+    outfile.close()
+
+
 if __name__ == '__main__':
     # All individual phase files, stimulus protocol file and stimulus protocol data file need to be in this folder:
-    my_input_path = r'E:\Christoph\Downloads\data_saccades_detected\data_saccades_detected\fish01'
-    main(my_input_path)
+    input_path = ['..', 'exp2', 'data_saccades_detected']
+
+    # Combine individual phase-files for each fish into all_phases-file
+    print('Combining phase files...')
+    for foldername in os.listdir(os.path.join(*input_path)):
+        if foldername.endswith('.txt') or not foldername.startswith('fish'):
+            continue
+        print(foldername)
+
+        main_combine_phases(os.path.join(*input_path, foldername))
+
+    print('Combine fish files...')
+    main_combine_fishes(input_path, 'all_data.txt')
