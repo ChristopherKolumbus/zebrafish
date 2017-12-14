@@ -4,7 +4,7 @@ import math
 import numpy as np
 import os
 
-analysis_path = ['..', 'exp2', 'data_saccades_detected']
+analysis_path = ['..']
 
 def load_csv(filename, labels):
     # create data dictionary
@@ -57,9 +57,9 @@ def load_csv_master(filename, labels = None):
                   'fishid']
 
     data = load_csv(filename, labels)
-    data['spatfreq'] = np.round(data['cycper360deg'] / 360, 2)
-    data['spatperiod'] = np.round(1. / data['spatfreq'], 2)
-    data['tempfreq'] = np.round(data['spatfreq'] * data['degpersec'], 2)
+    data['spatfreq'] = data['cycper360deg'] / 360
+    data['spatperiod'] = 1. / data['spatfreq']
+    data['tempfreq'] = data['spatfreq'] * data['degpersec']
 
     return data
 
