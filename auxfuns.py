@@ -1,9 +1,10 @@
 import csv
 from IPython import embed
+import math
 import numpy as np
 import os
 
-analysis_path = ['..', 'exp2' ,'data_saccades_detected']
+analysis_path = ['..', 'exp2', 'data_saccades_detected']
 
 def load_csv(filename, labels):
     # create data dictionary
@@ -36,13 +37,32 @@ def load_csv(filename, labels):
 
 def load_csv_master(filename, labels = None):
     if labels is None:
-        labels = ['lt', 'rt', 'l_sp', 'r_sp', 'stimphase', 'analysis_id', 'fishid']
+        labels = ['analysisid',
+                  'stimphase',
+                  'ltime',
+                  'rtime',
+                  'lspslope',
+                  'rspslope',
+                  'lsaccamp',
+                  'rsaccamp',
+                  'phasestart',
+                  'degpersec',
+                  'stimdur',
+                  'one1',
+                  'one2',
+                  'one3',
+                  'one4',
+                  'one5',
+                  'cycper360deg',
+                  'fishid']
 
-    return load_csv(filename, labels)
+    data = load_csv(filename, labels)
+    data['spatfreq'] = np.round(data['cycper360deg'] / 360, 2)
+    data['spatperiod'] = np.round(1. / data['spatfreq'], 2)
+    data['tempfreq'] = np.round(data['spatfreq'] * data['degpersec'], 2)
 
+    return data
 
 
 if __name__ == '__main__':
-    data = load_csv_master('all_data.txt')
-
-    embed()
+    pass
