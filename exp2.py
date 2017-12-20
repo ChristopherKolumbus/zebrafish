@@ -5,6 +5,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.stats import sem
 from time import sleep
+import scipy.io as scio
+
+mpl.rcParams['font.size'] = 11.0
 
 mpl.rcParams['axes.linewidth'] = 1.5
 
@@ -122,13 +125,23 @@ amp_unique = np.unique(sacc_amp_avg)
 vel_unique = np.unique(slowphase_vel_avg)
 gain_unique = np.unique(slowphase_gain_avg)
 
+cmap_scheme = 'viridis'
+#cmap_scheme = 'jet'
+#jetcmap = scio.loadmat('jetforpy.mat')['myColors']
+markersize = 21
+fontsize = 9
+#slowphase_vel_cmap = jetcmap
+#slowphase_gain_cmap = jetcmap
+#sacc_amp_cmap = jetcmap
+
+
 fig11 = custom_fig('Saccade amplitude on Temporal / spatial', heatmap_size)
 ax11 = fig11.add_subplot(1, 1, 1)
 # add colorbar
 minval = np.min(np.floor(amp_unique))
 maxval = np.ceil(np.max(amp_unique))
 zticks = np.arange(minval, maxval + 0.01)
-cax = ax11.imshow(np.concatenate((zticks, zticks)).reshape((2, -1)), interpolation='nearest', cmap='viridis')
+cax = ax11.imshow(np.concatenate((zticks, zticks)).reshape((2, -1)), interpolation='nearest', cmap=cmap_scheme)
 cbar = fig11.colorbar(cax, ticks=zticks)
 cbar.ax.set_ylabel('Saccade amplitude [deg]')
 sacc_amp_cmap = np.asarray(cbar.cmap.colors)
@@ -142,7 +155,7 @@ ax12 = fig12.add_subplot(1, 1, 1)
 minval = np.min(np.floor(vel_unique))
 maxval = np.ceil(np.max(vel_unique))
 zticks = np.arange(minval, maxval + 0.01)
-cax = ax12.imshow(np.concatenate((zticks, zticks)).reshape((2, -1)), interpolation='nearest', cmap='viridis')
+cax = ax12.imshow(np.concatenate((zticks, zticks)).reshape((2, -1)), interpolation='nearest', cmap=cmap_scheme)
 cbar = fig12.colorbar(cax, ticks=zticks)
 cbar.ax.set_ylabel('Slowphase velocity [deg/s]')
 slowphase_vel_cmap = np.asarray(cbar.cmap.colors)
@@ -155,7 +168,7 @@ ax13 = fig13.add_subplot(1, 1, 1)
 minval = np.floor(np.min(gain_unique) * 10) / 10
 maxval = np.ceil(np.max(gain_unique) * 10) / 10
 zticks = np.arange(minval, maxval + 0.01, 0.1)
-cax = ax13.imshow(np.concatenate((zticks, zticks)).reshape((2, -1)), interpolation='nearest', cmap='viridis')
+cax = ax13.imshow(np.concatenate((zticks, zticks)).reshape((2, -1)), interpolation='nearest', cmap=cmap_scheme)
 cbar = fig13.colorbar(cax, ticks=zticks)
 cbar.ax.set_ylabel('Slowphase gain')
 slowphase_gain_cmap = np.asarray(cbar.cmap.colors)
@@ -164,30 +177,49 @@ plt.cla()  # clears imshow plot, but keeps the colorbar
 
 
 for sfreq, tfreq, amp, vel, gain in zip(avg_sfreqs, avg_tfreqs, sacc_amp_avg, slowphase_vel_avg, slowphase_gain_avg):
-    ax11.loglog(sfreq, tfreq, marker='o', markersize=20, color=sacc_amp_cmap[np.argmin(np.abs(sacc_amp_valmap - amp)), :])
-    ax12.loglog(sfreq, tfreq, marker='o', markersize=20, color=slowphase_vel_cmap[np.argmin(np.abs(slowphase_vel_valmap - vel)), :])
-    ax13.loglog(sfreq, tfreq, marker='o', markersize=20, color=slowphase_gain_cmap[np.argmin(np.abs(slowphase_gain_valmap - gain)), :])
+
+    if sum(amp < sacc_amp_valmap) > len(sacc_amp_valmap) / 2:
+        fontcolor = 'w'
+    else:
+        fontcolor = 'k'
+    ax11.loglog(sfreq, tfreq, marker='o', markersize=markersize, color=sacc_amp_cmap[np.argmin(np.abs(sacc_amp_valmap - amp)), :])
+    ax11.text(sfreq, tfreq, str(round(amp, 1)), fontsize=fontsize, color=fontcolor,  ha='center', va='center')
+
+    if sum(vel < slowphase_vel_valmap) > len(slowphase_vel_valmap) / 2:
+        fontcolor = 'w'
+    else:
+        fontcolor = 'k'
+    ax12.loglog(sfreq, tfreq, marker='o', markersize=markersize, color=slowphase_vel_cmap[np.argmin(np.abs(slowphase_vel_valmap - vel)), :])
+    ax12.text(sfreq, tfreq, str(round(vel, 1)), fontsize=fontsize, color=fontcolor, ha='center', va='center')
+
+
+    if sum(gain < slowphase_gain_valmap) > len(slowphase_gain_valmap) / 2:
+        fontcolor = 'w'
+    else:
+        fontcolor = 'k'
+    ax13.loglog(sfreq, tfreq, marker='o', markersize=markersize, color=slowphase_gain_cmap[np.argmin(np.abs(slowphase_gain_valmap - gain)), :])
+    ax13.text(sfreq, tfreq, str(round(gain, 1)), fontsize=fontsize, color=fontcolor, ha='center', va='center')
 
 ax11.set_xlabel('Spatial frequency [cyc/deg]')
 ax11.set_ylabel('Temporal frequency [cyc/s]')
 ax11.set_xlim(xlim)
 ax11.set_ylim(ylim)
 adjust_spines(ax11)
-fig11.savefig('../sacc_amp_map.eps', format='eps')
+fig11.savefig('../sacc_amp_map.png', format='png', dpi=100)
 
 ax12.set_xlabel('Spatial frequency [cyc/deg]')
 ax12.set_ylabel('Temporal frequency [cyc/s]')
 ax12.set_xlim(xlim)
 ax12.set_ylim(ylim)
 adjust_spines(ax12)
-fig12.savefig('../slowphase_vel_map.eps', format='eps')
+fig12.savefig('../slowphase_vel_map.png', format='png', dpi=100)
 
 ax13.set_xlabel('Spatial frequency [cyc/deg]')
 ax13.set_ylabel('Temporal frequency [cyc/s]')
 ax13.set_xlim(xlim)
 ax13.set_ylim(ylim)
 adjust_spines(ax13)
-fig13.savefig('../slowphase_gain_map.eps', format='eps')
+fig13.savefig('../slowphase_gain_map.png', format='png', dpi=100)
 
 
 plt.show()
