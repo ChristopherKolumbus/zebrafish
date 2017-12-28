@@ -31,17 +31,17 @@ mpl.rcParams['figure.subplot.right'] = 0.95
 # load relevant data
 data = load_csv_master('all_data01.txt')
 
-
-
-# calculate results
-
+print('Calculating fish data...')
 # average for each fish
+sacc_freq = []
 sacc_amp = []
+sacc_permin = []
 slowphase_vel = []
 slowphase_gain = []
 tempfreqs = []
 spatfreqs = []
 for fidx, fishid in enumerate(np.unique(data['fishid'])):
+    print(fishid)
     fishfilt = data['fishid'] == fishid
 
     for tidx, tfreq in enumerate(np.unique(np.abs(data['tempfreq']))):
@@ -51,20 +51,28 @@ for fidx, fishid in enumerate(np.unique(data['fishid'])):
             spatfilt = data['spatfreq'] == sfreq
             filtvec = fishfilt & tempfilt & spatfilt
 
-            rsaccamp = np.abs(data['rsaccamp'][filtvec])
-            lsaccamp = np.abs(data['lsaccamp'][filtvec])
-            rspslope = np.abs(data['rspslope'][filtvec])
-            lspslope = np.abs(data['lspslope'][filtvec])
-            stim_degpersec = tfreq / sfreq
+            if sum(filtvec) > 0:
+                trial_nums = len(np.unique(data['stimphase'][filtvec]))  # number of 60s trials
 
-            if len(rspslope) + len(lspslope) > 0:
+                rsaccfreq = sum(np.logical_not(np.isnan(data['rsaccamp'][filtvec]))) / trial_nums  # saccades per minute
+                lsaccfreq = sum(np.logical_not(np.isnan(data['lsaccamp'][filtvec]))) / trial_nums  # saccades per minute
+                rsaccamp = np.abs(data['rsaccamp'][filtvec])
+                lsaccamp = np.abs(data['lsaccamp'][filtvec])
+                rspslope = np.abs(data['rspslope'][filtvec])
+                lspslope = np.abs(data['lspslope'][filtvec])
+                stim_degpersec = tfreq / sfreq
+
+                # append data
+                tempfreqs.append(tfreq)
+                spatfreqs.append(sfreq)
+
+                sacc_freq.append(np.mean([lsaccfreq, rsaccfreq]))
                 sacc_amp.append(np.nanmean(np.concatenate((rsaccamp, lsaccamp))))
                 slowphase_vel.append(np.nanmean(np.concatenate((rspslope, lspslope))))
                 slowphase_gain.append(slowphase_vel[-1] / stim_degpersec)
 
-                tempfreqs.append(tfreq)
-                spatfreqs.append(sfreq)
 # convert to array
+sacc_freq = np.asarray(sacc_freq)
 sacc_amp = np.asarray(sacc_amp)
 slowphase_vel = np.asarray(slowphase_vel)
 slowphase_gain = np.asarray(slowphase_gain)
@@ -73,6 +81,8 @@ spatfreqs = np.asarray(spatfreqs)
 
 
 # average over fish
+sacc_freq_avg = []
+sacc_freq_sem = []
 sacc_amp_avg = []
 sacc_amp_sem = []
 slowphase_vel_avg = []
@@ -85,9 +95,14 @@ for idx, (tfreq, sfreq)in enumerate(list(set(list(zip(tempfreqs, spatfreqs))))):
     avg_sfreqs.append(sfreq)
     avg_tfreqs.append(tfreq)
 
+    freqs = sacc_freq[(tempfreqs == tfreq) & (spatfreqs == sfreq)]
     amps = sacc_amp[(tempfreqs == tfreq) & (spatfreqs == sfreq)]
     vels = slowphase_vel[(tempfreqs == tfreq) & (spatfreqs == sfreq)]
     gains = slowphase_gain[(tempfreqs == tfreq) & (spatfreqs == sfreq)]
+
+
+    sacc_freq_avg.append(np.nanmean(freqs))
+    sacc_freq_sem.append(sem(freqs, nan_policy='omit'))
 
     sacc_amp_avg.append(np.nanmean(amps))
     sacc_amp_sem.append(sem(amps, nan_policy='omit'))
@@ -117,10 +132,9 @@ slowphase_gain_sem = np.asarray(slowphase_gain_sem)
 ####
 # heatmap-like
 heatmap_size = (12.5, 11.5)
-xlim = [0.01, 0.3]
-ylim = [0.1, 5]
 
 
+freq_unique = np.unique(sacc_freq_avg)
 amp_unique = np.unique(sacc_amp_avg)
 vel_unique = np.unique(slowphase_vel_avg)
 gain_unique = np.unique(slowphase_gain_avg)
@@ -129,11 +143,23 @@ cmap_scheme = 'viridis'
 #cmap_scheme = 'jet'
 #jetcmap = scio.loadmat('jetforpy.mat')['myColors']
 markersize = 21
-fontsize = 9
 #slowphase_vel_cmap = jetcmap
 #slowphase_gain_cmap = jetcmap
 #sacc_amp_cmap = jetcmap
 
+
+fig10 = custom_fig('Saccade frequency on Temporal / spatial', heatmap_size)
+ax10 = fig10.add_subplot(1, 1, 1)
+# add colorbar
+minval = np.min(np.floor(freq_unique))
+maxval = np.ceil(np.max(freq_unique))
+zticks = np.arange(minval, maxval + 0.01)
+cax = ax10.imshow(np.concatenate((zticks, zticks)).reshape((2, -1)), interpolation='nearest', cmap=cmap_scheme)
+cbar = fig10.colorbar(cax, ticks=zticks)
+cbar.ax.set_ylabel('Saccade frequency [1/min]')
+sacc_freq_cmap = np.asarray(cbar.cmap.colors)
+sacc_freq_valmap = np.arange(minval, maxval, (maxval - minval) / sacc_freq_cmap.shape[0])
+plt.cla()  # clears imshow plot, but keeps the colorbar
 
 fig11 = custom_fig('Saccade amplitude on Temporal / spatial', heatmap_size)
 ax11 = fig11.add_subplot(1, 1, 1)
@@ -175,52 +201,45 @@ slowphase_gain_cmap = np.asarray(cbar.cmap.colors)
 slowphase_gain_valmap = np.arange(minval, maxval, (maxval - minval) / slowphase_gain_cmap.shape[0])
 plt.cla()  # clears imshow plot, but keeps the colorbar
 
-
-for sfreq, tfreq, amp, vel, gain in zip(avg_sfreqs, avg_tfreqs, sacc_amp_avg, slowphase_vel_avg, slowphase_gain_avg):
-
-    if sum(amp < sacc_amp_valmap) > len(sacc_amp_valmap) / 2:
+def plot_colorpoint(ax, x, y, z, cmap, valmap, fontsize = 9):
+    if sum(z < valmap) > len(valmap) / 2:
         fontcolor = 'w'
     else:
         fontcolor = 'k'
-    ax11.loglog(sfreq, tfreq, marker='o', markersize=markersize, color=sacc_amp_cmap[np.argmin(np.abs(sacc_amp_valmap - amp)), :])
-    ax11.text(sfreq, tfreq, str(round(amp, 1)), fontsize=fontsize, color=fontcolor,  ha='center', va='center')
+    ax.loglog(x, y, marker='o', markersize=markersize, color=cmap[np.argmin(np.abs(valmap - z)), :])
+    ax.text(x, y, str(round(z, 1)), fontsize=fontsize, color=fontcolor,  ha='center', va='center')
 
-    if sum(vel < slowphase_vel_valmap) > len(slowphase_vel_valmap) / 2:
-        fontcolor = 'w'
-    else:
-        fontcolor = 'k'
-    ax12.loglog(sfreq, tfreq, marker='o', markersize=markersize, color=slowphase_vel_cmap[np.argmin(np.abs(slowphase_vel_valmap - vel)), :])
-    ax12.text(sfreq, tfreq, str(round(vel, 1)), fontsize=fontsize, color=fontcolor, ha='center', va='center')
+for sfreq, tfreq, freq, amp, vel, gain in zip(avg_sfreqs, avg_tfreqs, sacc_freq_avg, sacc_amp_avg, slowphase_vel_avg, slowphase_gain_avg):
+    fontsize = 9
+
+    plot_colorpoint(ax10, sfreq, tfreq, freq, sacc_freq_cmap, sacc_freq_valmap)
+    plot_colorpoint(ax11, sfreq, tfreq, amp, sacc_amp_cmap, sacc_amp_valmap)
+    plot_colorpoint(ax12, sfreq, tfreq, vel, slowphase_vel_cmap, slowphase_vel_valmap)
+    plot_colorpoint(ax13, sfreq, tfreq, gain, slowphase_gain_cmap, slowphase_gain_valmap)
 
 
-    if sum(gain < slowphase_gain_valmap) > len(slowphase_gain_valmap) / 2:
-        fontcolor = 'w'
-    else:
-        fontcolor = 'k'
-    ax13.loglog(sfreq, tfreq, marker='o', markersize=markersize, color=slowphase_gain_cmap[np.argmin(np.abs(slowphase_gain_valmap - gain)), :])
-    ax13.text(sfreq, tfreq, str(round(gain, 1)), fontsize=fontsize, color=fontcolor, ha='center', va='center')
+def set_axes(ax, xlim = [0.01, 0.3], ylim = [0.1, 5]):
+    ax.set_xlabel('Spatial frequency [cyc/deg]')
+    ax.set_ylabel('Temporal frequency [cyc/s]')
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    adjust_spines(ax)
 
-ax11.set_xlabel('Spatial frequency [cyc/deg]')
-ax11.set_ylabel('Temporal frequency [cyc/s]')
-ax11.set_xlim(xlim)
-ax11.set_ylim(ylim)
-adjust_spines(ax11)
+# adjust axes
+set_axes(ax10)
+set_axes(ax11)
+set_axes(ax12)
+set_axes(ax13)
+
+#fig10.savefig('../sacc_freq_map.png', format='png', dpi=100)
+fig10.savefig('../sacc_freq_map.svg', format='svg')
+
 #fig11.savefig('../sacc_amp_map.png', format='png', dpi=100)
 fig11.savefig('../sacc_amp_map.svg', format='svg')
 
-ax12.set_xlabel('Spatial frequency [cyc/deg]')
-ax12.set_ylabel('Temporal frequency [cyc/s]')
-ax12.set_xlim(xlim)
-ax12.set_ylim(ylim)
-adjust_spines(ax12)
 #fig12.savefig('../slowphase_vel_map.png', format='png', dpi=100)
 fig12.savefig('../slowphase_vel_map.svg', format='svg')
 
-ax13.set_xlabel('Spatial frequency [cyc/deg]')
-ax13.set_ylabel('Temporal frequency [cyc/s]')
-ax13.set_xlim(xlim)
-ax13.set_ylim(ylim)
-adjust_spines(ax13)
 #fig13.savefig('../slowphase_gain_map.png', format='png', dpi=100)
 fig13.savefig('../slowphase_gain_map.svg', format='svg')
 
