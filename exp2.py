@@ -210,8 +210,6 @@ def plot_colorpoint(ax, x, y, z, cmap, valmap, fontsize = 9):
     ax.text(x, y, str(round(z, 1)), fontsize=fontsize, color=fontcolor,  ha='center', va='center')
 
 for sfreq, tfreq, freq, amp, vel, gain in zip(avg_sfreqs, avg_tfreqs, sacc_freq_avg, sacc_amp_avg, slowphase_vel_avg, slowphase_gain_avg):
-    fontsize = 9
-
     plot_colorpoint(ax10, sfreq, tfreq, freq, sacc_freq_cmap, sacc_freq_valmap)
     plot_colorpoint(ax11, sfreq, tfreq, amp, sacc_amp_cmap, sacc_amp_valmap)
     plot_colorpoint(ax12, sfreq, tfreq, vel, slowphase_vel_cmap, slowphase_vel_valmap)
@@ -231,70 +229,71 @@ set_axes(ax11)
 set_axes(ax12)
 set_axes(ax13)
 
-#fig10.savefig('../sacc_freq_map.png', format='png', dpi=100)
 fig10.savefig('../sacc_freq_map.svg', format='svg')
 
-#fig11.savefig('../sacc_amp_map.png', format='png', dpi=100)
 fig11.savefig('../sacc_amp_map.svg', format='svg')
 
-#fig12.savefig('../slowphase_vel_map.png', format='png', dpi=100)
 fig12.savefig('../slowphase_vel_map.svg', format='svg')
 
-#fig13.savefig('../slowphase_gain_map.png', format='png', dpi=100)
 fig13.savefig('../slowphase_gain_map.svg', format='svg')
 
 
-plt.show()
-exit()
-# function of spatial freq
-fig2 = plt.figure('Gain / spatial (tf=0.8)')
+
+mpl.rcParams['figure.subplot.top'] = 0.95
+mpl.rcParams['figure.subplot.bottom'] = 0.20
+mpl.rcParams['figure.subplot.left'] = 0.08
+mpl.rcParams['figure.subplot.right'] = 0.97
+
+plot2dSize = (22, 9)
+
+figGain = custom_fig('Gains appendix', plot2dSize)
+
+limY = [0.0, 0.6]
+tickY = np.arange(0, 0.61, 0.1)
+
+axSF = figGain.add_subplot(1, 3, 1)
+axTF = figGain.add_subplot(1, 3, 2)
+axSFTF = figGain.add_subplot(1, 3, 3)
+
+# function of spatial freq (const tf)
 # sort data
 const_tf = np.round(avg_tfreqs, 1) == 0.8
 sfs, gains, sems = list(zip(*sorted(zip(avg_sfreqs[const_tf], slowphase_gain_avg[const_tf], slowphase_gain_sem[const_tf]))))
 
-ax2 = fig2.add_subplot(1, 1, 1)
-ax2.semilogx()
-ax2.errorbar(sfs, gains, yerr=sems)
-ax2.set_xlabel('Spatial frequency [cyc/deg]')
-ax2.set_ylabel('Gain')
+axSF.semilogx()
+axSF.errorbar(sfs, gains, yerr=sems, color='black')
+axSF.set_xlabel('Spatial frequency [cyc/deg]')
+axSF.set_ylabel('Gain')
+axSF.set_ylim(limY)
+axSF.set_yticks(tickY)
+adjust_spines(axSF)
 
 
-# function of temporal freq
-fig2 = plt.figure('Gain / temporal (sf=0.06)')
+# function of temporal freq (const sf)
 # sort data
 const_sf = np.round(avg_sfreqs, 2) == 0.06
 tfs, gains, sems = list(zip(*sorted(zip(avg_tfreqs[const_sf], slowphase_gain_avg[const_sf], slowphase_gain_sem[const_sf]))))
 
-ax2 = fig2.add_subplot(1, 1, 1)
-ax2.semilogx()
-ax2.errorbar(tfs, gains, yerr=sems)
-ax2.set_xlabel('Temporal frequency [cyc/s]')
-ax2.set_ylabel('Gain')
+axTF.semilogx()
+axTF.errorbar(tfs, gains, yerr=sems, color='black')
+axTF.set_xlabel('Temporal frequency [cyc/s]')
+axTF.set_ylim(limY)
+axTF.set_yticks(tickY)
+adjust_spines(axTF)
 
-
-# (constant velocity) function of spatial freq
-fig3 = plt.figure('(const velocity) Gain / spatial')
+# function of spatial freq * temporal freq (const v)
 # sort data
 const_v = np.round(avg_sfreqs / avg_tfreqs, 2) == 0.08
 sfs, gains, sems = list(zip(*sorted(zip(avg_sfreqs[const_v], slowphase_gain_avg[const_v], slowphase_gain_sem[const_v]))))
 
-ax3 = fig3.add_subplot(1, 1, 1)
-ax3.semilogx()
-ax3.errorbar(sfs, gains, yerr=sems)
-ax3.set_xlabel('Spatial frequency [cyc/deg]')
-ax3.set_ylabel('Gain')
+axSFTF.semilogx()
+axSFTF.errorbar(np.asarray(sfs) * np.asarray(tfs), gains, yerr=sems, color='black')
+axSFTF.set_xlabel('SF * TF [cyc/(deg * s)]')
+axSFTF.set_ylim(limY)
+axSFTF.set_yticks(tickY)
+adjust_spines(axSFTF)
 
 
-# (constant velocity) function of temporal freq
-fig3 = plt.figure('(const velocity) Gain / temporal')
-# sort data
-const_v = np.round(avg_sfreqs / avg_tfreqs, 2) == 0.08
-tfs, gains, sems = list(zip(*sorted(zip(avg_tfreqs[const_v], slowphase_gain_avg[const_v], slowphase_gain_sem[const_v]))))
-
-ax3 = fig3.add_subplot(1, 1, 1)
-ax3.semilogx()
-ax3.errorbar(tfs, gains, yerr=sems)
-ax3.set_xlabel('Temporal frequency [cyc/s]')
-ax3.set_ylabel('Gain')
+plt.savefig('../gains_appendix.svg', format='svg')
 
 plt.show()

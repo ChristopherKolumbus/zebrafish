@@ -101,13 +101,15 @@ def get_traces(input_path, stimulus_protocol_data_file):
         time_line = []
         left_eye_position = []
         right_eye_position = []
+        phase = []
         time_line_offset = get_time_line_offset(stimulus_protocol_data_file)
         stimulus_protocol_data_file_reader = csv.reader(f, delimiter='\t')
         for row in stimulus_protocol_data_file_reader:
             time_line.append(float(row[0]) - time_line_offset)
             left_eye_position.append(float(row[4]))
             right_eye_position.append(float(row[5]))
-    return time_line, left_eye_position, right_eye_position
+            phase.append(int(float(row[-1])))
+    return time_line, left_eye_position, right_eye_position, phase
 
 
 def get_trace_slice(time_line, eye_position, time_of_saccade, window_size=0.5):
@@ -143,7 +145,7 @@ def main_combine_phases(input_path):
     stimulus_protocol_file = get_stimulus_protocol_file(input_path)
     stimulus_protocol_data_file = get_stimulus_protocol_data_file(input_path)
     phase_data = combine_all_phase_files(input_path, phase_files)
-    time_line, left_eye_position, right_eye_position = get_traces(input_path, stimulus_protocol_data_file)
+    time_line, left_eye_position, right_eye_position, _ = get_traces(input_path, stimulus_protocol_data_file)
     phase_data = add_saccade_amplitudes(time_line, left_eye_position, phase_data, which_eye='left')
     phase_data = add_saccade_amplitudes(time_line, right_eye_position, phase_data, which_eye='right')
     phase_data = add_phase_starts(input_path, stimulus_protocol_data_file, phase_data)
